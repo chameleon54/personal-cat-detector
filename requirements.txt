@@ -1,0 +1,5 @@
+# This is a requirements file for a Python project that uses TensorFlow and Pillow.
+# It specifies the exact versions of the packages to ensure compatibility.
+tensorflow==2.19.0
+pillow==11.3.0
+numpy==2.1.3
