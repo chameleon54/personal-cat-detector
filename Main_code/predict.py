@@ -3,10 +3,11 @@ import tensorflow as tf
 from utils import load_and_preprocess_image, load_class_names, decode_prediction
 
 
-IMAGE_FOLDER = "test_images" #change this to your folder containing your cat images
+IMAGE_FOLDER = "Main_code\Images" #change this to your folder containing your cat images
 
 
-model = tf.keras.models.load_model("cat_breed_model.h5")
+
+model = tf.keras.models.load_model("Main_code\cat_breed_model.h5")
 class_names = load_class_names()
 
 
