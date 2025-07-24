@@ -2,14 +2,14 @@ import os
 import tensorflow as tf
 from utils import load_and_preprocess_image, load_class_names, decode_prediction
 
-# Path to the folder containing test images
-IMAGE_FOLDER = "test_images"
 
-# Load trained model and class labels
+IMAGE_FOLDER = "test_images" #change this to your folder containing your cat images
+
+
 model = tf.keras.models.load_model("cat_breed_model.h5")
 class_names = load_class_names()
 
-# Loop through all image files in the folder
+
 for filename in os.listdir(IMAGE_FOLDER):
     if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
         image_path = os.path.join(IMAGE_FOLDER, filename)

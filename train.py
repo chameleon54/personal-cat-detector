@@ -12,3 +12,7 @@ print("✅ Model saved as cat_breed_model.h5")
 with open("class_names.txt", "w") as f:
     for name in info.features['label'].names:
         f.write(f"{name}\n")
+
+#ONLY RUN THIS IF YOU WANT TO TRAIN THE MODEL
+# If you want to train the model, make sure to run this script in an environment with TensorFlow installed.
+# This script will load the dataset, build the model, train it, and save the trained model along with class names.
