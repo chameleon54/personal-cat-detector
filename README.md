@@ -4,6 +4,7 @@ right now it doesnt have a GUI yet but if you want to run it just run predict.py
 
 Dont forget to install all from the requirements.txt using
 "pip install -r requirements.txt"
+test
 
 
 test branch
