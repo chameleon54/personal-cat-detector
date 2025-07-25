@@ -25,3 +25,12 @@ header h1 {
     align-items: center;
     margin-top: 40vh;
 }
+
+.Datang a {
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 20px;
+    padding: 10px 20px;
+    /* background-color: #1E90FF; */
+    border-radius: 5px;
+}
