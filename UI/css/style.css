@@ -1,3 +1,4 @@
+/* Settings for body */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -5,6 +6,7 @@ body {
     background-color: #070F2B;
 }
 
+/* Settings for header */
 header {
     color: #FFFFFF;
     padding: 2px;
@@ -12,12 +14,21 @@ header {
 
 header h1 {
     margin: 0;
-    padding: 8px;
+    padding: 10px;
     font-size: 24px;
     font-style: italic;
 }
 
-.Datang {
+/* Settings for div class page */
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.page.active {
     color: #FFFFFF;
     padding: 2px;
     display: flex;
@@ -26,11 +37,18 @@ header h1 {
     margin-top: 40vh;
 }
 
-.Datang a {
+.page.active a {
     color: #FFFFFF;
     text-decoration: none;
     font-size: 20px;
     padding: 10px 20px;
-    /* background-color: #1E90FF; */
+    background-color: #0165c9;
     border-radius: 5px;
+    transition: background-color 0.5s;
+}
+
+.page.active a:hover {
+    background-color: #27333f;
+    color: #FFFFFF;
+    transition: background-color 1s;
 }
