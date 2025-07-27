@@ -40,7 +40,16 @@ batch = tf.concat(images, axis=0)
 # Run batch prediction
 predictions = model.predict(batch, verbose=0)
 
-# Decode and print results
+#results
+results = []
 for filename, pred in zip(valid_filenames, predictions):
     label, confidence = decode_prediction(pred, class_names)
-    print(f"{filename} → {label} ({confidence * 100:.2f}%)")
+    results.append({
+        "filename": filename,
+        "label": label,
+        "confidence": float(f"{confidence * 100:.2f}%")  
+    }) #buat taka biar gampang :3
+
+# Example: send to UI or print as JSON
+import json
+print(json.dumps(results, indent=2))
