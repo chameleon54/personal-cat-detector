@@ -1,26 +1,39 @@
 import os
+from pathlib import Path
 import tensorflow as tf
 from utils import load_and_preprocess_image, load_class_names, decode_prediction
 
-
-IMAGE_FOLDER = "Main_code\Images" #change this to your folder containing your cat images
-
-
-
-model = tf.keras.models.load_model("Main_code\cat_breed_model.h5")
+#image folder and model path
+IMAGE_FOLDER = Path("Main_code/Images")
+model = tf.keras.models.load_model("Main_code/cat_breed_model.h5")
 class_names = load_class_names()
 
+#image format files
+image_paths = [p for p in IMAGE_FOLDER.iterdir() if p.suffix.lower() in ['.jpg', '.jpeg', '.png']]
 
-for filename in os.listdir(IMAGE_FOLDER):
-    if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-        image_path = os.path.join(IMAGE_FOLDER, filename)
-        
-        try:
-            image = load_and_preprocess_image(image_path)
-            prediction = model.predict(image)[0]
+#changing the process into a single batch instead of one by one 
+images = []
+valid_paths = []
 
-            label, confidence = decode_prediction(prediction, class_names)
-            print(f"{filename} → {label} ({confidence * 100:.2f}%)")
-        
-        except Exception as e:
-            print(f"Error processing {filename}: {e}")
+for image_path in image_paths:
+    try:
+        img = load_and_preprocess_image(str(image_path))
+        images.append(img)
+        valid_paths.append(image_path.name)
+    except Exception as e:
+        print(f"Error loading {image_path.name}: {e}")
+
+if not images:
+    print("No valid images found.")
+    exit()
+
+# Stack into a batch
+batch = tf.concat(images, axis=0)  
+
+
+predictions = model.predict(batch)
+
+
+for filename, pred in zip(valid_paths, predictions):
+    label, confidence = decode_prediction(pred, class_names)
+    print(f"{filename} → {label} ({confidence * 100:.2f}%)")
