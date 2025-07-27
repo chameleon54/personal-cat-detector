@@ -47,7 +47,7 @@ for filename, pred in zip(valid_filenames, predictions):
     results.append({
         "filename": filename,
         "label": label,
-        "confidence": float(f"{confidence * 100:.2f}%")  
+        "confidence": float(f"{confidence * 100:.2f}")  #THIS IS A PERCENTAGE FORMAT SO ADD % ON THE RESULT
     }) #buat taka biar gampang :3
 
 # Example: send to UI or print as JSON
