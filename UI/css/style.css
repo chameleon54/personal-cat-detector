@@ -27,7 +27,7 @@ header h1 {
 .page.active {
     display: block;
 }
-
+/* kok ada dua page active? yang atas display block yang bawah display flex */
 .page.active {
     color: #FFFFFF;
     padding: 2px;
