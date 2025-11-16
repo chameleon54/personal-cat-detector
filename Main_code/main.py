@@ -12,8 +12,6 @@ app = FastAPI()
 
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
-
 # Allow all origins (you can restrict later)
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +23,10 @@ app.add_middleware(
 
 
 # Load model and classes once
-MODEL_PATH = "Main_code/cat_breed_model.h5"
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "cat_breed_model.h5"
 model = tf.keras.models.load_model(MODEL_PATH)
 class_names = load_class_names()  # e.g. from Main_code/class_names.txt
 
