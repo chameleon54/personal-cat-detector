@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 import tensorflow as tf
+from pathlib import Path
 
 IMG_SIZE = 224
 
@@ -12,10 +13,11 @@ def load_and_preprocess_image(image_path):
     return np.expand_dims(img_array, axis=0)
 
 def load_class_names(filename="class_names.txt"):
-    
-    with open(filename, "r") as f:
+    base_dir = Path(__file__).resolve().parent
+    class_file = base_dir / filename
+    with open(class_file, 'r') as f:
         return [line.strip() for line in f.readlines()]
-
+    
 def decode_prediction(pred, class_names):
     
     top_index = np.argmax(pred)
