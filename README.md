@@ -1,6 +1,6 @@
 # 🐱 Personal Cat Detector — Test Bench
 
-This repository contains the test bench and backend server for the Personal Cat Detector project.  
+This repository contains the randomness of I don't know what am I doing and backend server for the Personal Cat Detector project.  
 Follow the steps below to install dependencies, activate the virtual environment, run the server, and test the prediction system.
 
 ---
