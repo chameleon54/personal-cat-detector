@@ -10,6 +10,20 @@ import tempfile
 
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# Allow all origins (you can restrict later)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 # Load model and classes once
 MODEL_PATH = "Main_code/cat_breed_model.h5"
 model = tf.keras.models.load_model(MODEL_PATH)
