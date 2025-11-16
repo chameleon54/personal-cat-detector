@@ -14,3 +14,5 @@ and after that go ahead and activate venv
 
 lastly run this python -m uvicorn main:app --reload
 
+Dont forget to install all from the requirements.txt using
+"pip install -r requirements.txt"
