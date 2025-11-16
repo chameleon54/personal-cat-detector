@@ -1,18 +1,51 @@
-THIS IS TEST BENCH 
+🐱 Personal Cat Detector — Test Bench
 
-dont forget to pip install -r requirements.txt before running it
-and to run just use "python Main_code\\predict.py"
+This repository contains the test bench and backend server for the Personal Cat Detector project.
+Follow the steps below to install dependencies, activate the virtual environment, run the server, and test the prediction system.
+
+📦 Installation
+1. Install Dependencies
+
+Before running anything, make sure to install all required packages:
+pip install -r requirements.txt
+
+To run the standalone prediction script:
+python Main_code\predict.py
+
+🌐 Running the Backend Server (FastAPI + Uvicorn)
+1. Navigate to the Main_code Folder
+Open VS Code terminal or Command Prompt and move into:
+cd Main_code
+Example :"C:\..\github rep\personal-cat-detector\Main_code"
+
+2. Activate the Virtual Environment
+If successful, your terminal will show something like:
+..\venv\Scripts\activate
+
+3. Start the FastAPI Server
+python -m uvicorn main:app --reload
+The server will be available at: http://127.0.0.1:8000
 
 
-how to run the server and website
-open your terminal in vscode or just use CMD
-firstly cd to Main_code folder
-example : "C:..\github rep\personal-cat-detector\Main_code"
+🖥️ Running the Website / Frontend
 
-and after that go ahead and activate venv 
-"..\venv\Scripts\activate"
+If you want to run the project that includes its UI (HTML/CSS/JS):
 
-lastly run this python -m uvicorn main:app --reload
+Open the UI folder
 
-Dont forget to install all from the requirements.txt using
-"pip install -r requirements.txt"
+Use Live Server (VS Code extension)
+OR
+
+Serve the static site with any basic server
+
+Make sure the backend server is running first, because the website connects to: http://127.0.0.1:8000/predict
+
+🛠️ Notes
+
+Always activate the virtual environment before running any Python script.
+
+If you add or update dependencies, reinstall them using:
+pip install -r requirements.txt
+
+⭐ Contributing
+Issues, suggestions, and pull requests are always welcome!
