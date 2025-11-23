@@ -9,3 +9,63 @@ body {
   margin-top: 20px;
   border-radius: 10px;
 }
+
+.loader {
+  margin: 20px auto;
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #333;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Result Card */
+.result-card {
+  width: 320px;
+  margin: 25px auto;
+  padding: 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: left;
+  font-family: Arial;
+  animation: fadeIn 0.4s ease;
+}
+
+.result-card h3 {
+  margin-top: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.result-card p {
+  margin: 6px 0;
+  font-size: 16px;
+}
+
+.confidence-bar {
+  width: 100%;
+  height: 12px;
+  background: #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: #4CAF50;
+  width: 0%; /* Filled using JS */
+  transition: width 0.6s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

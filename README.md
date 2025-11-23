@@ -12,5 +12,5 @@ example : "C:..\github rep\personal-cat-detector\Main_code"
 and after that go ahead and activate venv 
 "..\venv\Scripts\activate"
 
-lastly run this python -m uvicorn main:app --reload
+lastly run this "python -m uvicorn main:app --reload"
 
