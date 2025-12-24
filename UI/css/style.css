@@ -4,6 +4,64 @@ body {
   margin-top: 40px;
 }
 
+.kepala {
+  margin: 0;
+  color: #fff;
+  padding-bottom: 50px;
+}
+
+.headTitle {
+  text-decoration: none;
+  color: #000;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.fileDrop {
+  display: flex;
+  justify-content: center;
+}
+
+#drop-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 500px;
+  max-width: 100%;
+  height: 200px;
+  padding: 1em;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#file-input {
+  display: none;
+}
+
+.filePreview {
+  display: flex;
+  justify-content: center;
+}
+
+#preview {
+  width: 500px;
+  max-width: 100%;
+  flex-direction: column;
+  gap: 0.5em;
+  list-style: none;
+  padding: 0;
+}
+
+#preview li {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  width: 100%;
+  height: 100px;
+}
+
 #preview img {
   max-width: 300px;
   margin-top: 20px;
@@ -26,6 +84,7 @@ body {
 }
 
 /* Result Card */
+
 .result-card {
   width: 320px;
   margin: 25px auto;

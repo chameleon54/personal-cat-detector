@@ -7,15 +7,30 @@
   <link rel="stylesheet" href="/UI/css/style.css" />
 </head>
 <body>
-  <h1>Cat Breed Detector</h1>
-
-  <input type="file" id="imageInput" accept="image/*">
-  <button onclick="sendImage()">Predict</button>
-
-  <div id="preview"></div>
-  <div id="result"></div>
-  <div id="loader" class="loader" style="display: none;"></div>
-
+  <header class="kepala">
+      <a href="index.html" class="headTitle">Cat Breed Detector</a>
+  </header>
+  
+  <div class="fileInput">
+    <div class="fileDrop">
+      <label id="drop-zone">
+      Drop images here, or click to upload.
+      <input type="file" id="imageInput" multiple accept="image/*" />
+    </label>
+    </div>
+    <div class="filePreview">
+      <div id="result">
+        <h3>Prediction Result:</h3>
+        <div id="predictions"></div>
+        <div id="loader" class="loader" style="display: none;"></div>
+      </div>
+      <ul id="preview"></ul>
+  </div>
+  <div class="fileButton">
+    <button id="clear-btn">Clear</button>
+    <button onclick="sendImage()">Predict</button>
+  </div>
+  </div>
 
   <script src="/UI/js/script.js"></script>
 </body>
