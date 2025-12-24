@@ -25,8 +25,8 @@ function sendImage() {
         body: formData
     })
         .then(res => res.json())
-        .then(data => {
-            if (data.error) {
+        .then(data => { //result from backend
+            if (data.error) { 
                 document.getElementById("result").innerHTML = "Error: " + data.error;
             } else {
                 document.getElementById("result").innerHTML = `
