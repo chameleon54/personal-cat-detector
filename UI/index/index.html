@@ -3,35 +3,207 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cat Breed Detector</title>
-  <link rel="stylesheet" href="/UI/css/style.css" />
-</head>
-<body>
-  <header class="kepala">
-      <a href="index.html" class="headTitle">Cat Breed Detector</a>
-  </header>
-  
-  <div class="fileInput">
-    <div class="fileDrop">
-      <label id="drop-zone">
-      Drop images here, or click to upload.
-      <input type="file" id="imageInput" multiple accept="image/*" />
-    </label>
-    </div>
-    <div class="filePreview">
-      <div id="result">
-        <h3>Prediction Result:</h3>
-        <div id="predictions"></div>
-        <div id="loader" class="loader" style="display: none;"></div>
-      </div>
-      <ul id="preview"></ul>
-  </div>
-  <div class="fileButton">
-    <button id="clear-btn">Clear</button>
-    <button onclick="sendImage()">Predict</button>
-  </div>
-  </div>
+  <title>Cat Breed Detector — Kenali ras kucingmu</title>
+  <meta name="description" content="Upload a photo and find out your cat's breed. Unggah foto dan kenali ras kucingmu." />
 
-  <script src="/UI/js/script.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: "#F7F2E9",
+            paper2: "#EFE6D8",
+            ink: "#201B16",
+            inksoft: "#6E6357",
+            line: "#DCD1BF",
+            clay: "#B4533A",
+            claydark: "#8E3F2B",
+            amber: "#C98A3C",
+          },
+          fontFamily: {
+            display: ["Fraunces", "Georgia", "serif"],
+            sans: ['"DM Sans"', "system-ui", "sans-serif"],
+          },
+          maxWidth: { content: "76rem" },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-paper text-ink font-sans antialiased">
+  <a href="#view-home" class="skip-link">Skip to content</a>
+
+  <main id="app" class="relative z-10">
+
+    <!-- ══════════════ HOME / WELCOME ══════════════ -->
+    <section id="view-home" class="view" aria-label="Welcome">
+      <header class="mx-auto max-w-content px-6 pt-8 flex items-center justify-between">
+        <a href="#view-home" class="wordmark">Cat<span class="text-clay">·</span>Detector</a>
+        <p class="hidden sm:block text-[0.68rem] uppercase tracking-[0.2em] text-inksoft">Oxford-IIIT Pet · CNN</p>
+      </header>
+
+      <div class="mx-auto max-w-content px-6">
+        <div class="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center pt-14 pb-20 lg:pt-24 lg:pb-28">
+
+          <div class="lg:col-span-6 reveal">
+            <p class="eyebrow">01 — Breed Identification</p>
+
+            <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl leading-[0.98] tracking-tight mt-6">
+              What kind of <em class="italic text-clay">cat</em> do&nbsp;you&nbsp;have?
+            </h1>
+
+            <p class="font-display italic text-xl text-inksoft mt-6">
+              Unggah foto, dan kenali ras kucingmu dalam sekejap.
+            </p>
+
+            <p class="text-base leading-relaxed text-inksoft mt-6 max-w-xl">
+              Drop in a photo and a convolutional network trained on the Oxford-IIIT Pet
+              dataset estimates the breed — along with how confident it is about the guess.
+            </p>
+
+            <div class="mt-9 flex flex-wrap items-center gap-4">
+              <button id="start-btn" type="button" class="btn-primary">
+                Start detecting <span class="arrow" aria-hidden="true">→</span>
+              </button>
+              <span class="text-sm text-inksoft">Mulai deteksi · gratis</span>
+            </div>
+
+            <ul class="mt-14 border-t border-line pt-5 flex flex-wrap gap-x-8 gap-y-2 text-[0.68rem] uppercase tracking-[0.18em] text-inksoft">
+              <li>37 breeds</li>
+              <li>Trained locally</li>
+              <li>Runs on 127.0.0.1</li>
+            </ul>
+          </div>
+
+          <div class="lg:col-span-6 reveal" style="--delay: 140ms">
+            <figure class="specimen">
+              <div class="specimen-frame">
+                <img src="../assets/hero-cat.jpg" alt="A cat photographed for breed identification" />
+              </div>
+              <figcaption class="specimen-cap">
+                <span>Specimen 01</span>
+                <span>Felis catus</span>
+              </figcaption>
+            </figure>
+          </div>
+
+        </div>
+      </div>
+
+      <footer class="mx-auto max-w-content px-6 pb-10 flex flex-col sm:flex-row gap-2 sm:items-center justify-between text-[0.68rem] uppercase tracking-[0.18em] text-inksoft">
+        <span>Cat Breed Detector</span>
+        <span>Made for a personal project</span>
+      </footer>
+    </section>
+
+    <!-- ══════════════ DETECTOR ══════════════ -->
+    <section id="view-detect" class="view" aria-label="Detector" hidden>
+      <header class="mx-auto max-w-content px-6 pt-8 flex items-center justify-between gap-4">
+        <button id="back-btn" type="button" class="btn-ghost">← Back</button>
+        <a href="#view-detect" class="wordmark">Cat<span class="text-clay">·</span>Detector</a>
+        <p class="hidden sm:block text-[0.68rem] uppercase tracking-[0.2em] text-inksoft">02 — Detector</p>
+      </header>
+
+      <div class="mx-auto max-w-content px-6 pt-12 pb-20">
+        <div class="max-w-2xl">
+          <p class="eyebrow">02 — Detector</p>
+          <h2 class="font-display text-4xl sm:text-5xl leading-tight mt-4">Upload a photo of your cat.</h2>
+          <p class="text-inksoft mt-4">
+            Unggah foto kucingmu — pastikan wajah dan bulunya terlihat jelas.
+          </p>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-8 lg:gap-10 mt-12">
+
+          <!-- Upload column -->
+          <div class="lg:col-span-7">
+            <div id="drop-zone" class="dropzone" role="button" tabindex="0" aria-label="Upload a cat photo">
+              <input id="imageInput" type="file" accept="image/*" class="hidden" />
+
+              <div id="drop-empty" class="dropzone-empty">
+                <svg class="w-10 h-10 mx-auto text-clay" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="4" y="6" width="24" height="20" rx="2" />
+                  <path d="M4 21l6-6 5 5 4-4 9 9" />
+                  <circle cx="21" cy="12" r="1.8" />
+                </svg>
+                <p class="font-display text-2xl mt-5">Drop your photo here</p>
+                <p class="text-sm text-inksoft mt-2">
+                  or <span class="text-clay underline underline-offset-4 decoration-clay/40">browse files</span> · JPG, PNG
+                </p>
+                <p class="text-[0.68rem] uppercase tracking-[0.18em] text-inksoft mt-7">Atau seret foto ke sini</p>
+              </div>
+
+              <div id="drop-preview" class="hidden">
+                <img id="preview-img" alt="Selected cat photo preview" />
+                <button id="remove-btn" type="button" class="preview-remove" aria-label="Remove image">×</button>
+              </div>
+            </div>
+
+            <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
+              <p id="file-meta" class="text-[0.68rem] uppercase tracking-[0.15em] text-inksoft">No file selected · Belum ada foto</p>
+              <div class="flex gap-3">
+                <button id="clear-btn" type="button" class="btn-ghost" disabled>Clear</button>
+                <button id="predict-btn" type="button" class="btn-primary" disabled>
+                  Analyze <span class="arrow" aria-hidden="true">→</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Result column -->
+          <aside class="lg:col-span-5">
+            <div id="result-panel" class="result-panel" aria-live="polite">
+              <div class="panel-head">
+                <p class="eyebrow">Result</p>
+                <span id="result-status" class="status-dot">Idle</span>
+              </div>
+
+              <div id="result-placeholder" class="result-state">
+                <p class="font-display text-xl text-inksoft">Your result will appear here.</p>
+                <p class="text-sm text-inksoft mt-2">Hasil prediksi akan muncul di sini.</p>
+              </div>
+
+              <div id="result-loading" class="result-state hidden">
+                <div class="spinner" role="status" aria-label="Analyzing"></div>
+                <p class="text-sm text-inksoft mt-5">Analyzing image… · Menganalisis…</p>
+              </div>
+
+              <div id="result-error" class="result-state hidden">
+                <p class="font-display text-xl text-clay">Couldn't read that image</p>
+                <p id="error-text" class="text-sm text-inksoft mt-2"></p>
+              </div>
+
+              <div id="result-card" class="result-state hidden">
+                <span id="breed-tag" class="tag">Cat breed</span>
+                <h3 id="breed-name" class="font-display text-3xl leading-tight mt-4">—</h3>
+                <p id="breed-note" class="text-sm text-inksoft mt-3 leading-relaxed"></p>
+
+                <div class="mt-7">
+                  <div class="flex items-baseline justify-between">
+                    <span class="text-[0.68rem] uppercase tracking-[0.18em] text-inksoft">Confidence</span>
+                    <span id="conf-value" class="font-display text-2xl">—</span>
+                  </div>
+                  <div class="meter"><div id="conf-fill" class="meter-fill"></div></div>
+                </div>
+
+                <button id="again-btn" type="button" class="btn-ghost w-full mt-8 justify-center">
+                  Detect another · Deteksi lagi
+                </button>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script.js"></script>
 </body>
 </html>
