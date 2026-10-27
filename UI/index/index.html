@@ -75,7 +75,7 @@
             </div>
 
             <ul class="mt-14 border-t border-line pt-5 flex flex-wrap gap-x-8 gap-y-2 text-[0.68rem] uppercase tracking-[0.18em] text-inksoft">
-              <li>37 breeds</li>
+              <li>12 cat breeds</li>
               <li>Trained locally</li>
               <li>Runs on your own</li>
             </ul>
@@ -124,7 +124,7 @@
           <!-- Upload column -->
           <div class="lg:col-span-7">
             <div id="drop-zone" class="dropzone" role="button" tabindex="0" aria-label="Upload a cat photo">
-              <input id="imageInput" type="file" accept="image/*" class="hidden" />
+              <input id="imageInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" />
 
               <div id="drop-empty" class="dropzone-empty">
                 <svg class="w-10 h-10 mx-auto text-clay" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -134,7 +134,7 @@
                 </svg>
                 <p class="font-display text-2xl mt-5">Drop your photo here</p>
                 <p class="text-sm text-inksoft mt-2">
-                  or <span class="text-clay underline underline-offset-4 decoration-clay/40">browse files</span> · JPG, PNG
+                  or <span class="text-clay underline underline-offset-4 decoration-clay/40">browse files</span> · JPG, PNG, WEBP
                 </p>
                 <p class="text-[0.68rem] uppercase tracking-[0.18em] text-inksoft mt-7">Atau seret foto ke sini</p>
               </div>
@@ -184,13 +184,20 @@
                 <h3 id="breed-name" class="font-display text-3xl leading-tight mt-4">—</h3>
                 <p id="breed-note" class="text-sm text-inksoft mt-3 leading-relaxed"></p>
 
-                <div class="mt-7">
-                  <div class="flex items-baseline justify-between">
-                    <span class="text-[0.68rem] uppercase tracking-[0.18em] text-inksoft">Confidence</span>
-                    <span id="conf-value" class="font-display text-2xl">—</span>
-                  </div>
-                  <div class="meter"><div id="conf-fill" class="meter-fill"></div></div>
+                <div id="pred-block" class="mt-7">
+                  <span class="text-[0.68rem] uppercase tracking-[0.18em] text-inksoft">Top matches · Kemungkinan ras</span>
+                  <ul id="pred-list" class="pred-list"></ul>
                 </div>
+
+                <template id="pred-row-tpl">
+                  <li class="pred-row">
+                    <div class="flex items-baseline justify-between gap-3">
+                      <span class="pred-breed"></span>
+                      <span class="pred-value font-display"></span>
+                    </div>
+                    <div class="meter"><div class="meter-fill"></div></div>
+                  </li>
+                </template>
 
                 <button id="again-btn" type="button" class="btn-ghost w-full mt-8 justify-center">
                   Detect another · Deteksi lagi

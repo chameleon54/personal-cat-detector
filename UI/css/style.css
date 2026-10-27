@@ -295,6 +295,16 @@ body::before {
 }
 .tag.is-cat { border-color: rgba(180, 83, 58, 0.5); color: var(--clay-dark); background: rgba(180, 83, 58, 0.07); }
 .tag.is-dog { border-color: rgba(201, 138, 60, 0.55); color: #8a5b1c; background: rgba(201, 138, 60, 0.1); }
+.tag.is-human { border-color: rgba(79, 106, 122, 0.5); color: #3f5868; background: rgba(79, 106, 122, 0.08); }
+.tag.is-other { background: var(--paper-2); }
+
+/* Top-3 breed list */
+.pred-list { margin-top: 0.9rem; display: grid; gap: 1.1rem; }
+.pred-breed { font-size: 0.95rem; }
+.pred-value { font-size: 1.15rem; }
+.pred-row:first-child .pred-breed { font-weight: 600; }
+.pred-row:first-child .pred-value { font-size: 1.6rem; }
+.pred-row:not(:first-child) .meter-fill { opacity: 0.55; }
 
 .meter {
   margin-top: 0.6rem;

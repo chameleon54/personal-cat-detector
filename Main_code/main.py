@@ -1,16 +1,17 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import JSONResponse
-import tensorflow as tf
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 import numpy as np
-import shutil
-import os
-from utils import load_and_preprocess_image, load_class_names, decode_prediction
+import tensorflow as tf
 from pathlib import Path
-import tempfile
+from utils import (
+    load_image_from_bytes, preprocess_pil, to_model_input,
+    load_class_names, is_cat_breed, prettify_label,
+)
+from gatekeeper import classify_category, pet_model, pet_class_names
 
 app = FastAPI()
-
-from fastapi.middleware.cors import CORSMiddleware
 
 # Allow all origins (you can restrict later)
 app.add_middleware(
@@ -21,35 +22,84 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# Load model and classes once
-from pathlib import Path
-
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR / "cat_breed_model.h5"
-model = tf.keras.models.load_model(MODEL_PATH)
-class_names = load_class_names()  # e.g. from Main_code/class_names.txt
+UI_DIR = BASE_DIR.parent / "UI"
 
-@app.post("/predict")
-async def predict_image(file: UploadFile = File(...)):
-    # Save to a temp file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix) as tmp:
-        shutil.copyfileobj(file.file, tmp)
-        tmp_path = tmp.name
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+TOP_K = 3
+UNCERTAIN_BELOW = 0.40   # top breed under this -> flag as mixed/uncertain
+
+MESSAGES = {
+    "dog": "It's a dog",
+    "human": "It's a human",
+    "other": "Not a cat",
+}
+
+# Load the breed model once.
+# v2 = cat-only model from train_cats.py (does its own preprocessing).
+# Fallback = original 37-class Oxford pet model (cats + dogs, expects 0..1 input).
+V2_MODEL_PATH = BASE_DIR / "cat_breed_model_v2.keras"
+if V2_MODEL_PATH.exists():
+    model = tf.keras.models.load_model(V2_MODEL_PATH)
+    class_names = load_class_names("cat_class_names.txt")
+    prepare_input = to_model_input
+    print(f"Loaded breed model: {V2_MODEL_PATH.name}")
+else:
+    model = pet_model   # already loaded by gatekeeper
+    class_names = pet_class_names
+    prepare_input = preprocess_pil
+    print("Loaded breed model: cat_breed_model.h5 (fallback)")
+
+cat_indices = [i for i, name in enumerate(class_names) if is_cat_breed(name)]
+
+def predict_breeds(img):
+    x = prepare_input(img)
+    # Test-time augmentation: average the photo and its mirror image
+    batch = np.concatenate([x, x[:, :, ::-1, :]], axis=0)
+    probs = model.predict(batch, verbose=0).mean(axis=0)
+
+    # Keep cat classes only and rescale so they add up to 1
+    # (a no-op for the cat-only v2 model)
+    cat_probs = probs[cat_indices]
+    cat_probs = cat_probs / cat_probs.sum()
+
+    order = np.argsort(cat_probs)[::-1][:TOP_K]
+    return [
+        {"breed": prettify_label(class_names[cat_indices[i]]),
+         "confidence": round(float(cat_probs[i]), 4)}
+        for i in order
+    ]
+
+# Plain def (not async) so FastAPI runs the model in a worker thread
+@app.post("/analyze")
+@app.post("/predict")  # old name, kept so existing callers still work
+def analyze_image(file: UploadFile = File(...)):
+    data = file.file.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
+        return JSONResponse(content={"error": "Image is too large (max 25 MB)."}, status_code=413)
 
     try:
-        # Load and preprocess image
-        img_tensor = load_and_preprocess_image(tmp_path)
-        prediction = model.predict(img_tensor, verbose=0)[0]
-        label, confidence = decode_prediction(prediction, class_names)
+        img = load_image_from_bytes(data)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
 
-        return JSONResponse(content={
-            "filename": file.filename,
-            "label": label,
-            "confidence": f"{confidence * 100:.2f}%"  # as percent
-        })
+    try:
+        category = classify_category(img)
+        if category != "cat":
+            return {"category": category, "message": MESSAGES[category]}
 
+        predictions = predict_breeds(img)
+        return {
+            "category": "cat",
+            "predictions": predictions,
+            "uncertain": predictions[0]["confidence"] < UNCERTAIN_BELOW,
+        }
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
-    finally:
-        os.remove(tmp_path)
+
+# Serve the web UI from the same server: http://127.0.0.1:8000/
+@app.get("/", include_in_schema=False)
+def home():
+    return RedirectResponse("/index/index.html")
+
+app.mount("/", StaticFiles(directory=UI_DIR), name="ui")

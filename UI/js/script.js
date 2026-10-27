@@ -2,11 +2,18 @@
    Cat Breed Detector — UI/js/script.js
    FastAPI contract (Main_code/main.py):
      POST {API_URL}  multipart/form-data  field name: "file"
-     → 200 { filename, label, confidence }        confidence like "87.50%"
-     → 500 { error }
+     → 200 { category: "cat", predictions: [{ breed, confidence }], uncertain }
+                                                  confidence is 0..1, top 3
+     → 200 { category: "dog" | "human" | "other", message }
+     → 400 / 413 / 500 { error }
    ═══════════════════════════════════════════════════════════ */
 
-const API_URL = "http://127.0.0.1:8000/predict";
+// Same origin when served by FastAPI (http://127.0.0.1:8000/),
+// otherwise (file:// or Live Server) talk to the local API directly.
+const API_BASE = location.port === "8000" ? "" : "http://127.0.0.1:8000";
+const API_URL = `${API_BASE}/analyze`;
+const REQUEST_TIMEOUT_MS = 30000;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 /* ─── Element refs ─── */
 const el = {
@@ -37,19 +44,26 @@ const el = {
   breedTag: document.getElementById("breed-tag"),
   breedName: document.getElementById("breed-name"),
   breedNote: document.getElementById("breed-note"),
-  confValue: document.getElementById("conf-value"),
-  confFill: document.getElementById("conf-fill"),
+  predBlock: document.getElementById("pred-block"),
+  predList: document.getElementById("pred-list"),
+  predTpl: document.getElementById("pred-row-tpl"),
 };
 
-/* ─── The model is NOT cats-only: Oxford-IIIT Pet includes dog breeds ─── */
-const DOG_BREEDS = new Set([
-  "american_bulldog", "american_pit_bull_terrier", "basset_hound", "beagle", "boxer",
-  "chihuahua", "english_cocker_spaniel", "english_setter", "german_shorthaired",
-  "great_pyrenees", "havanese", "japanese_chin", "keeshond", "leonberger",
-  "miniature_pinscher", "newfoundland", "pomeranian", "pug", "saint_bernard",
-  "samoyed", "scottish_terrier", "shiba_inu", "staffordshire_bull_terrier",
-  "wheaten_terrier", "yorkshire_terrier",
-]);
+/* ─── Non-cat results: the backend decides the category ─── */
+const CATEGORY_INFO = {
+  dog: {
+    tag: "Dog",
+    note: "This detector only identifies cat breeds. Ini anjing, bukan kucing.",
+  },
+  human: {
+    tag: "Human",
+    note: "This detector only identifies cat breeds. Ini manusia, bukan kucing.",
+  },
+  other: {
+    tag: "Not a cat",
+    note: "We couldn't find a cat in this photo. Coba foto kucing yang lebih jelas.",
+  },
+};
 
 let selectedFile = null;
 
@@ -87,12 +101,12 @@ el.againBtn.addEventListener("click", () => {
 
 /* ═══════════════ File selection ═══════════════ */
 function isImage(file) {
-  return Boolean(file) && file.type.startsWith("image/");
+  return Boolean(file) && ALLOWED_TYPES.includes(file.type);
 }
 
 function setFile(file) {
   if (!isImage(file)) {
-    showError("That file isn't an image. Please choose a JPG or PNG.");
+    showError("Please choose a JPG, PNG or WEBP image. · Pilih foto JPG, PNG atau WEBP.");
     return;
   }
   selectedFile = file;
@@ -126,7 +140,7 @@ function resetSelection() {
   el.fileMeta.textContent = "No file selected · Belum ada foto";
   el.clearBtn.disabled = true;
   el.predictBtn.disabled = true;
-  el.confFill.style.width = "0%";
+  el.predList.replaceChildren();
   showState("placeholder");
   setStatus("Idle");
 }
@@ -210,13 +224,16 @@ async function predict() {
   el.clearBtn.disabled = true;
   showState("loading");
   setStatus("Working", "is-working");
-  el.confFill.style.width = "0%";
 
   const formData = new FormData();
   formData.append("file", selectedFile); // must match FastAPI's File(...) param
 
+  // Give up on a hung backend instead of spinning forever.
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   try {
-    const res = await fetch(API_URL, { method: "POST", body: formData });
+    const res = await fetch(API_URL, { method: "POST", body: formData, signal: controller.signal });
 
     // Backend returns JSON for both success and error paths.
     let data;
@@ -232,53 +249,70 @@ async function predict() {
 
     renderResult(data);
   } catch (err) {
-    const isNetwork = err instanceof TypeError;
-    showError(
-      isNetwork
-        ? "Can't reach the API. Start it with: python -m uvicorn main:app --reload (from Main_code)."
-        : err.message
-    );
+    if (err.name === "AbortError") {
+      showError("The server took too long to answer. Please try again. · Server terlalu lama merespons.");
+    } else if (err instanceof TypeError) {
+      showError("Can't reach the API. Start it with: python -m uvicorn main:app --reload (from Main_code).");
+    } else {
+      showError(err.message);
+    }
   } finally {
+    window.clearTimeout(timer);
     el.predictBtn.disabled = false;
     el.clearBtn.disabled = false;
   }
 }
 
 function renderResult(data) {
-  const raw = String(data.label ?? "Unknown");
-  const isDog = DOG_BREEDS.has(raw.toLowerCase());
-  const pretty = prettify(raw);
-
-  // Title-case the cat breeds; dog breeds read better lowercase in a sentence.
-  el.breedName.textContent = isDog ? pretty : titleCase(pretty);
-
-  el.breedTag.textContent = isDog ? "Dog breed — model also detects dogs" : "Cat breed";
-  el.breedTag.className = "tag " + (isDog ? "is-dog" : "is-cat");
-
-  el.breedNote.textContent = isDog
-    ? "Trained on Oxford-IIIT Pet, so it knows dog breeds too. Ras ini termasuk anjing."
-    : "Identified from your photo. Hasil ini perkiraan, bukan diagnosis.";
-
-  // Backend sends "87.50%" (a string) — normalize before doing math.
-  const pct = toPercent(data.confidence);
-  el.confValue.textContent = `${pct.toFixed(2)}%`;
-
+  if (data.category === "cat" && Array.isArray(data.predictions) && data.predictions.length) {
+    renderCat(data);
+  } else {
+    renderNonCat(data);
+  }
   showState("card");
   setStatus("Done", "is-done");
+}
 
+function renderCat(data) {
+  const top = data.predictions[0];
+  el.breedTag.textContent = "Cat breed";
+  el.breedTag.className = "tag is-cat";
+  el.breedName.textContent = data.uncertain ? "Mixed / uncertain breed" : top.breed;
+  el.breedNote.textContent = data.uncertain
+    ? `Closest match is ${top.breed}, but the model isn't sure. Bisa jadi kucing campuran.`
+    : "Identified from your photo. Hasil ini perkiraan, bukan diagnosis.";
+
+  const rows = data.predictions.map(({ breed, confidence }) => {
+    const row = el.predTpl.content.firstElementChild.cloneNode(true);
+    const pct = toPercent(confidence);
+    row.querySelector(".pred-breed").textContent = breed;
+    row.querySelector(".pred-value").textContent = `${pct.toFixed(1)}%`;
+    row.dataset.pct = pct;
+    return row;
+  });
+  el.predList.replaceChildren(...rows);
+  el.predBlock.classList.remove("hidden");
+
+  // Animate the bars from 0 once the rows are on screen.
   requestAnimationFrame(() => {
-    el.confFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+    rows.forEach((row) => {
+      row.querySelector(".meter-fill").style.width = `${row.dataset.pct}%`;
+    });
   });
 }
 
-function toPercent(value) {
-  const n = parseFloat(String(value).replace("%", "").trim());
-  return Number.isFinite(n) ? n : 0;
+function renderNonCat(data) {
+  const info = CATEGORY_INFO[data.category] ?? CATEGORY_INFO.other;
+  el.breedTag.textContent = info.tag;
+  el.breedTag.className = `tag is-${data.category in CATEGORY_INFO ? data.category : "other"}`;
+  el.breedName.textContent = data.message ?? "Not a cat";
+  el.breedNote.textContent = info.note;
+  el.predList.replaceChildren();
+  el.predBlock.classList.add("hidden");
 }
 
-function prettify(label) {
-  return String(label).replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
-}
-function titleCase(text) {
-  return text.replace(/\b\w/g, (c) => c.toUpperCase());
+// Backend sends 0..1 — convert to a clamped percentage.
+function toPercent(confidence) {
+  const n = Number(confidence) * 100;
+  return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
 }
