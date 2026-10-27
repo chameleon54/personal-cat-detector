@@ -212,3 +212,14 @@ __marimo__/
 
 
 
+
+# Guardrails: datasets, training output, secrets
+tensorflow_datasets/
+**/checkpoints/
+*.ckpt
+kaggle.json
+.env.*
+!.env.example
+.idea/
+Thumbs.db
+.DS_Store
