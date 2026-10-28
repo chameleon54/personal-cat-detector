@@ -1,16 +1,12 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import JSONResponse
-import tensorflow as tf
-import numpy as np
-import shutil
-import os
-from utils import load_and_preprocess_image, load_class_names, decode_prediction
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pathlib import Path
-import tempfile
+from utils import load_image_from_bytes
+from classifier import analyze
 
 app = FastAPI()
-
-from fastapi.middleware.cors import CORSMiddleware
 
 # Allow all origins (you can restrict later)
 app.add_middleware(
@@ -21,35 +17,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# Load model and classes once
-from pathlib import Path
-
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR / "cat_breed_model.h5"
-model = tf.keras.models.load_model(MODEL_PATH)
-class_names = load_class_names()  # e.g. from Main_code/class_names.txt
+UI_DIR = BASE_DIR.parent / "UI"
 
-@app.post("/predict")
-async def predict_image(file: UploadFile = File(...)):
-    # Save to a temp file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix) as tmp:
-        shutil.copyfileobj(file.file, tmp)
-        tmp_path = tmp.name
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+
+# Plain def (not async) so FastAPI runs the model in a worker thread
+@app.post("/analyze")
+@app.post("/predict")  # old name, kept so existing callers still work
+def analyze_image(file: UploadFile = File(...)):
+    data = file.file.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
+        return JSONResponse(content={"error": "Image is too large (max 25 MB)."}, status_code=413)
 
     try:
-        # Load and preprocess image
-        img_tensor = load_and_preprocess_image(tmp_path)
-        prediction = model.predict(img_tensor, verbose=0)[0]
-        label, confidence = decode_prediction(prediction, class_names)
+        img = load_image_from_bytes(data)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
 
-        return JSONResponse(content={
-            "filename": file.filename,
-            "label": label,
-            "confidence": f"{confidence * 100:.2f}%"  # as percent
-        })
-
+    try:
+        return analyze(img)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
-    finally:
-        os.remove(tmp_path)
+
+# Serve the web UI from the same server: http://127.0.0.1:8000/
+@app.get("/", include_in_schema=False)
+def home():
+    return RedirectResponse("/index/index.html")
+
+app.mount("/", StaticFiles(directory=UI_DIR), name="ui")

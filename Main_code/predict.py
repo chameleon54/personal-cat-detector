@@ -1,55 +1,25 @@
-import os
+# Test bench: runs every image in Main_code/Images through the same
+# pipeline as the web API and prints the /analyze JSON for each one.
+#   python Main_code/predict.py      (works from any folder)
+import json
 from pathlib import Path
-import tensorflow as tf
-from utils import load_and_preprocess_image, load_class_names, decode_prediction
+from utils import load_image_from_bytes
+from classifier import analyze
 
-# Image folder and model path
-IMAGE_FOLDER = Path("Main_code/Images")
-MODEL_PATH = "Main_code/cat_breed_model.h5"
+IMAGE_FOLDER = Path(__file__).resolve().parent / "Images"
+SUPPORTED_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.webp')
 
-# Load model and class names
-model = tf.keras.models.load_model(MODEL_PATH)
-class_names = load_class_names()  # Defaults "Main_code/class_names.txt"
+image_paths = sorted(p for p in IMAGE_FOLDER.iterdir() if p.suffix.lower() in SUPPORTED_EXTENSIONS)
+if not image_paths:
+    print("No valid images found.")
+    raise SystemExit
 
-# image format
-SUPPORTED_EXTENSIONS = ('.jpg', '.jpeg', '.png')
-
-# image paths based on supported extensions
-image_paths = [p for p in IMAGE_FOLDER.iterdir() if p.suffix.lower() in SUPPORTED_EXTENSIONS]
-
-# Prepare images for batch prediction
-images = []
-valid_filenames = []
-
+results = []
 for image_path in image_paths:
     try:
-        img = load_and_preprocess_image(str(image_path))  
-        images.append(img)
-        valid_filenames.append(image_path.name)
+        img = load_image_from_bytes(image_path.read_bytes())
+        results.append({"filename": image_path.name, **analyze(img)})
     except Exception as e:
-        print(f"Error loading {image_path.name}: {e}")
+        results.append({"filename": image_path.name, "error": str(e)})
 
-
-if not images:
-    print("No valid images found.")
-    exit()
-
-# Concatenate images into a single batch
-batch = tf.concat(images, axis=0)
-
-# Run batch prediction
-predictions = model.predict(batch, verbose=0)
-
-#results
-results = []
-for filename, pred in zip(valid_filenames, predictions):
-    label, confidence = decode_prediction(pred, class_names)
-    results.append({
-        "filename": filename,
-        "label": label,
-        "confidence": float(f"{confidence * 100:.2f}")  #THIS IS A PERCENTAGE FORMAT SO ADD % ON THE RESULT
-    }) #buat taka biar gampang :3
-
-# Example: send to UI or print as JSON
-import json
 print(json.dumps(results, indent=2))

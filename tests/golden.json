@@ -1,0 +1,50 @@
+{
+  "cat 4.jpg": {
+    "category": "cat",
+    "top1_confidence": 0.852,
+    "top3": [
+      "Ragdoll",
+      "Birman",
+      "Maine Coon"
+    ]
+  },
+  "cat1.jpg": {
+    "category": "cat",
+    "top1_confidence": 0.83,
+    "top3": [
+      "Persian",
+      "Maine Coon",
+      "Ragdoll"
+    ]
+  },
+  "cat2.jpg": {
+    "category": "cat",
+    "top1_confidence": 0.501,
+    "top3": [
+      "Russian Blue",
+      "British Shorthair",
+      "Abyssinian"
+    ]
+  },
+  "cat3.png": {
+    "category": "cat",
+    "top1_confidence": 0.925,
+    "top3": [
+      "Sphynx",
+      "Egyptian Mau",
+      "Russian Blue"
+    ]
+  },
+  "dog1.jpg": {
+    "category": "dog"
+  },
+  "orang1.jpeg": {
+    "category": "human"
+  },
+  "orang2.jpg": {
+    "category": "human"
+  },
+  "warna1.png": {
+    "category": "other"
+  }
+}

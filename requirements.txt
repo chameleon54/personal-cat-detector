@@ -9,4 +9,5 @@ flask-cors
 fastapi
 uvicorn
 python-multipart
+opencv-python-headless<5  # 5.x removed the Haar face detector
 

@@ -1,0 +1,110 @@
+# Server-side guardrails. These run on GitHub only: there are no local git hooks,
+# so committing and pushing from your PC is never slowed down or blocked.
+# Combine with a ruleset on `main` that requires both jobs below to pass
+# (see GUARDRAILS.md, "Make it block merges").
+name: Guardrails
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:        # "Run workflow" button in the Actions tab
+
+# A newer push to the same branch cancels the older, still-running check.
+concurrency:
+  group: guardrails-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------- fast --
+  fast:
+    name: Fast checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Secrets, big files, syntax, PRD/plan contract
+        run: python tools/guardrails/check_fast.py --all
+
+  # --------------------------------------------------------------- tests --
+  tests:
+    name: API & model tests
+    needs: fast               # don't spend minutes installing TF if fast checks fail
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # GitHub's shared runners are slower than a desktop CPU.
+      GUARDRAILS_MAX_LATENCY_S: "10"
+      TF_CPP_MIN_LOG_LEVEL: "2"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true           # needed if the model files are stored with Git LFS
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"   # TensorFlow 2.19 supports 3.9-3.12
+
+      # Linux is case-sensitive: find Main_code/ or main_code/.
+      - name: Locate backend folder
+        id: backend
+        run: |
+          for d in Main_code main_code; do
+            if [ -d "$d" ]; then echo "dir=$d" >> "$GITHUB_OUTPUT"; exit 0; fi
+          done
+          echo "::error::No Main_code/ folder found"; exit 1
+
+      - name: Check the model and sample images are in the repo
+        run: |
+          d="${{ steps.backend.outputs.dir }}"
+          found=0
+          for m in "$d/cat_breed_model_v2.keras" "$d/cat_breed_model.h5"; do
+            [ -f "$m" ] || continue
+            found=1
+            if head -c 200 "$m" | grep -q "git-lfs.github.com"; then
+              echo "::error::$m is a Git LFS pointer, not the real model. Check Git LFS setup."
+              exit 1
+            fi
+          done
+          if [ "$found" = 0 ]; then
+            echo "::error::No model file in $d/. Commit it (or use Git LFS) so CI can test it."
+            exit 1
+          fi
+          if [ ! -f tests/golden.json ]; then
+            echo "::warning::tests/golden.json is not committed, so photo regressions are not checked."
+          fi
+
+      - name: Cache pip downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt', 'requirements-dev.txt') }}
+
+      - name: Cache Keras ImageNet weights
+        uses: actions/cache@v4
+        with:
+          path: ~/.keras
+          key: keras-weights-v1
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run tests
+        run: python -m pytest tests -v --junitxml=test-results.xml
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results.xml

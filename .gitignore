@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+.mcp.json
+.ai-docs
+.serena/
 # Distribution / packaging
 .Python
 build/
@@ -206,3 +209,17 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 .vscode
+
+
+
+
+# Guardrails: datasets, training output, secrets
+tensorflow_datasets/
+**/checkpoints/
+*.ckpt
+kaggle.json
+.env.*
+!.env.example
+.idea/
+Thumbs.db
+.DS_Store
