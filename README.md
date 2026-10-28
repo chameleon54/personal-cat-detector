@@ -1,33 +1,98 @@
-# personal-cat-detector
+# 🐱 Personal Cat Detector — 
 
-Upload a photo and the app tells you the cat's breed, with a percentage for the top 3 matches.
-Dogs get "It's a dog", people get "It's a human", and anything else gets "Not a cat".
+This repository contains the randomness of I don't know what am I doing and backend server for the Personal Cat Detector project.  
+Follow the steps below to install dependencies, activate the virtual environment, run the server, and test the prediction system.
 
-- `Main_code/`: Python backend (FastAPI + TensorFlow). Details in [Main_code/README.md](Main_code/README.md).
-- `UI/`: the website (plain HTML / CSS / JS). The backend serves it, so there is nothing to build.
+---
 
-## Run the website
+## 📦 Installation
 
-Open a terminal (VS Code or CMD) in the project folder, then:
+### 1. Install Dependencies
+
+Before running anything, make sure to install all required packages:
 
 ```
-venv\Scripts\activate
 pip install -r requirements.txt
-cd Main_code
-python -m uvicorn main:app --reload
 ```
 
-Then open **http://127.0.0.1:8000/** in your browser.
-
-- Run `pip install -r requirements.txt` again after pulling new changes: it now needs `opencv-python-headless`.
-- The first start downloads the ImageNet weights (~14 MB), so it needs internet once.
-- Loading the models takes a few seconds before the server says it is ready.
-
-## Test bench (no website)
+To run the standalone prediction script:
 
 ```
 python Main_code\predict.py
 ```
 
-Runs every image in `Main_code/Images/` through the same pipeline as the website and prints the JSON
-for each one. It works from any folder.
+---
+
+## 🌐 Running the Backend Server (FastAPI + Uvicorn)
+
+### 1. Navigate to the `Main_code` Folder
+
+Open VS Code terminal or Command Prompt:
+
+```
+cd Main_code
+```
+
+Example:
+
+```
+C:\..\github rep\personal-cat-detector\Main_code
+```
+
+### 2. Activate the Virtual Environment
+
+```
+..\venv\Scripts\activate
+```
+
+If successful, your terminal will show something like:
+
+```
+(venv) C:\your\path>
+```
+
+### 3. Start the FastAPI Server
+
+```
+python -m uvicorn main:app --reload
+```
+
+The server will be available at:
+
+```
+http://127.0.0.1:8000
+```
+
+---
+
+## 🖥️ Running the Website / Frontend
+
+If you want to run the project that includes its UI (HTML/CSS/JS):
+
+1. Open the `UI` folder  
+2. Use **Live Server** (VS Code extension)  
+   **OR** serve the files using any static host  
+3. Ensure the backend server is running  
+
+The frontend communicates with the backend at:
+
+```
+http://127.0.0.1:8000/predict
+```
+
+---
+
+## 🛠️ Notes
+
+- Always activate the virtual environment before running any Python script.  
+- If you add or update dependencies, reinstall them:
+
+```
+pip install -r requirements.txt
+```
+
+---
+
+## ⭐ Contributing
+
+Issues, suggestions, and pull requests are always welcome!
